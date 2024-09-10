@@ -62,7 +62,7 @@
               myHeaders.append("Content-Type", "application/json");
 
               const raw = JSON.stringify({
-                model_input: "what are all the AMI locations",
+                model_input: message,
               });
 
               const requestOptions = {
