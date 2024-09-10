@@ -1,8 +1,11 @@
- (function () {
+(function () {
         // Chat bot configuration
         const config = {
-          botName: "Gravity",
+          botName: "ChatBot",
           welcomeMessage: "Hello! How can I help you today?",
+          apiUrl:
+            "https://blt6z4ojxe.execute-api.us-east-1.amazonaws.com/dev/chat",
+          // You might want to generate this dynamically
         };
 
         // Create chat bot UI
@@ -46,21 +49,53 @@
         }
 
         // Send message
-        function sendMessage() {
+        async function sendMessage() {
           const input = document.getElementById("chatbot-message-input");
           const message = input.value.trim();
           if (message) {
             addMessage("You", message);
             input.value = "";
             showTypingIndicator();
-            // Process the message and get a response
-            // This is where you'd integrate with your chatbot backend
-            setTimeout(() => {
-              const typingIndicator =
-                document.querySelector(".typing-indicator");
-              if (typingIndicator) typingIndicator.remove();
-              addMessage(config.botName, "I received your message: " + message);
-            }, 2000);
+
+            try {
+              const myHeaders = new Headers();
+              myHeaders.append("Content-Type", "application/json");
+
+              const raw = JSON.stringify({
+                model_input: "what are all the AMI locations",
+              });
+
+              const requestOptions = {
+                method: "POST",
+                headers: myHeaders,
+                body: raw,
+                redirect: "follow",
+              };
+
+              const response = await fetch(
+                "https://blt6z4ojxe.execute-api.us-east-1.amazonaws.com/dev/chat",
+                requestOptions
+              );
+
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+
+              const data = await response.json();
+              // Assuming the API returns the generated text in an 'output' field
+              const botResponse =
+                data.completion || "Sorry, I couldn't generate a response.";
+
+              removeTypingIndicator();
+              addMessage(config.botName, botResponse);
+            } catch (error) {
+              console.error("Error:", error);
+              removeTypingIndicator();
+              addMessage(
+                config.botName,
+                "Sorry, I encountered an error. Please try again later."
+              );
+            }
           }
         }
 
@@ -76,14 +111,14 @@
             minute: "2-digit",
           });
           messageElement.innerHTML = `
-            <div class="message-header">
-              <span class="sender">${sender === "You" ? "User" : "Agent"}</span>
-              <span class="time">at ${currentTime}</span>
-            </div>
-            <div class="chatbot-message">
-              <div class="message-content">${message}</div>
-            </div>
-          `;
+      <div class="message-header">
+        <span class="sender">${sender === "You" ? "User" : "Agent"}</span>
+        <span class="time">at ${currentTime}</span>
+      </div>
+      <div class="chatbot-message">
+        <div class="message-content">${message}</div>
+      </div>
+    `;
           messagesContainer.appendChild(messageElement);
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
@@ -94,12 +129,18 @@
           const typingElement = document.createElement("div");
           typingElement.className = "message-wrapper bot-message";
           typingElement.innerHTML = `
-            <div class="chatbot-message typing-indicator">
-              <span></span><span></span><span></span>
-            </div>
-          `;
+      <div class="chatbot-message typing-indicator">
+        <span></span><span></span><span></span>
+      </div>
+    `;
           messagesContainer.appendChild(typingElement);
           messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Remove typing indicator
+        function removeTypingIndicator() {
+          const typingIndicator = document.querySelector(".typing-indicator");
+          if (typingIndicator) typingIndicator.remove();
         }
 
         // Add styles
@@ -192,8 +233,6 @@
         margin-bottom: 4px;
         display: flex;
         align-items: baseline;
-        margin-left: 6px;
-        margin-right: 8px;
       }
       .user-message .message-header {
         justify-content: flex-end;
