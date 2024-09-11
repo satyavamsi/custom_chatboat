@@ -60,6 +60,7 @@
             try {
               const myHeaders = new Headers();
               myHeaders.append("Content-Type", "application/json");
+                myHeaders.append("x-api-key", "o8lKWvGJ9B9bSLmWmk2r79pWTzVzWHvWag5c2skX");
 
               const raw = JSON.stringify({
                 model_input: message,
